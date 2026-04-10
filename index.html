@@ -103,14 +103,18 @@ footer {
 <div class="container">
 
 <!-- 🤖 AI RECOMMENDER -->
-<div style="background:white;padding:20px;border-radius:10px;margin-bottom:20px;">
+<div style="display:flex; justify-content:space-between; align-items:center;">
     <h2>🤖 AI Journal Recommendation</h2>
-
-    <textarea id="abstract" placeholder="Paste your abstract here..."></textarea><br><br>
-
-    <button onclick="recommend()">Find Matching Journals</button>
-
-    <div id="aiResults"></div>
+    <button onclick="openModal()" style="
+        background:#2563eb;
+        color:white;
+        border:none;
+        padding:6px 12px;
+        border-radius:6px;
+        cursor:pointer;
+    ">
+        ℹ️ How it works
+    </button>
 </div>
 
 <!-- FILTER -->
@@ -409,7 +413,34 @@ top.forEach(j => {
     </div>
     `;
 });
+function openModal() {
+    document.getElementById("modal").style.display = "block";
+}
 
+function closeModal() {
+    document.getElementById("modal").style.display = "none";
+}
+
+// Close when clicking outside
+window.onclick = function(event) {
+    let modal = document.getElementById("modal");
+    if (event.target === modal) {
+        modal.style.display = "none";
+    }
+}
+<div style="display:flex; justify-content:space-between; align-items:center;">
+    <h2>🤖 AI Journal Recommendation</h2>
+    <button onclick="openModal()" style="
+        background:#2563eb;
+        color:white;
+        border:none;
+        padding:6px 12px;
+        border-radius:6px;
+        cursor:pointer;
+    ">
+        ℹ️ How it works
+    </button>
+</div>
 </script>
 
 </body>
