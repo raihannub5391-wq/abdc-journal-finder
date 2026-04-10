@@ -314,34 +314,67 @@ function recommend() {
 
     top.forEach(j => {
 
-        let r = (j.rank || "").replace("*","star");
+    let r = (j.rank || "").replace("*","star");
 
-        // 🎯 Calculate acceptance probability
-        let prob = predictAcceptance(j, j.score, abs);
+    let prob = predictAcceptance(j, j.score, abs);
 
-        // 🎨 Color logic
-        let color = prob > 70 ? "green" :
-                    prob > 40 ? "orange" : "red";
+    let color = prob > 70 ? "#16a34a" :
+                prob > 40 ? "#f59e0b" : "#dc2626";
 
-        html += `
-        <div class="card">
-            <b>${j.journal_name}</b>
-            <div class="badge ${r}">${j.rank || ""}</div>
-            <div>Field: ${j.field || ""}</div>
-            <div>Publisher: ${j.publisher || "N/A"}</div>
-            <div>ISSN: ${j.issn || ""}</div>
-            
-            <div><b>Match Score:</b> ${j.score}</div>
+    html += `
+    <div class="card" style="
+        border-left: 6px solid ${color};
+        padding:15px;
+        border-radius:10px;
+        background:#fff;
+        box-shadow:0 4px 12px rgba(0,0,0,0.08);
+    ">
+        
+        <div style="font-weight:bold; font-size:16px;">
+            ${j.journal_name}
+        </div>
 
-            <div style="margin-top:8px;">
-                <b>Acceptance Probability:</b> 
-                <span style="color:${color}; font-weight:bold;">
-                    ${prob}%
-                </span>
-            </div>
-        </div>`;
-    });
+        <div style="margin-top:5px;">
+            <span class="badge ${r}">${j.rank || ""}</span>
+        </div>
 
+        <div style="margin-top:8px; font-size:13px; color:#555;">
+            <div><b>Field:</b> ${j.field || "N/A"}</div>
+            <div><b>Publisher:</b> ${j.publisher || "N/A"}</div>
+            <div><b>ISSN:</b> ${j.issn || "N/A"}</div>
+        </div>
+
+        <!-- MATCH SCORE -->
+        <div style="margin-top:10px;">
+            <b>Match Score:</b> ${j.score}
+        </div>
+
+        <!-- ACCEPTANCE PROBABILITY -->
+        <div style="margin-top:8px;">
+            <b>Acceptance Probability:</b> 
+            <span style="color:${color}; font-weight:bold;">
+                ${prob}%
+            </span>
+        </div>
+
+        <!-- PROGRESS BAR -->
+        <div style="
+            margin-top:8px;
+            height:8px;
+            background:#eee;
+            border-radius:5px;
+            overflow:hidden;
+        ">
+            <div style="
+                width:${prob}%;
+                height:100%;
+                background:${color};
+            "></div>
+        </div>
+
+    </div>
+    `;
+});
     aiResults.innerHTML = html;
 }
 
