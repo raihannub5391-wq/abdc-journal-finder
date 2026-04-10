@@ -153,17 +153,20 @@ footer img {
 
 <!-- FILTERS -->
 <div class="filters">
-    <input id="name" placeholder="Journal Name">
-    <input id="issn" placeholder="ISSN">
-    <input id="publisher" placeholder="Publisher">
-    <input id="field" placeholder="Field">
-
+    <input id="search" placeholder="Search by Journal Name, ISSN, Publisher, or Field...">
+    
     <select id="rank">
         <option value="">All Ranks</option>
         <option>A*</option>
         <option>A</option>
         <option>B</option>
         <option>C</option>
+    </select>
+
+    <select id="sort">
+        <option value="">Sort</option>
+        <option value="name">Name A–Z</option>
+        <option value="rank">Rank</option>
     </select>
 </div>
 
@@ -220,35 +223,37 @@ function render(arr) {
 }
 
 // FILTER FUNCTION
-document.querySelectorAll("input, select").forEach(el => {
-    el.addEventListener("input", filter);
-    el.addEventListener("change", filter);
-});
+document.getElementById("search").addEventListener("input", filter);
+document.getElementById("rank").addEventListener("change", filter);
+document.getElementById("sort").addEventListener("change", filter);
 
 function filter() {
-    let n = name.value.toLowerCase();
-    let i = issn.value.toLowerCase();
-    let p = publisher.value.toLowerCase();
-    let f = field.value.toLowerCase();
-    let r = rank.value;
-    let s = sort.value;
 
-    let filtered = data.filter(j =>
-        (j.journal_name || "").toLowerCase().includes(n) &&
-        (j.issn || "").toLowerCase().includes(i) &&
-        (j.publisher || "").toLowerCase().includes(p) &&
-        (j.field || "").toLowerCase().includes(f) &&
-        (r === "" || j.rank === r)
-    );
+    let keyword = document.getElementById("search").value.toLowerCase();
+    let rankFilter = document.getElementById("rank").value;
+    let sort = document.getElementById("sort").value;
 
-    // SORT
-    if (s === "name") {
-        filtered.sort((a,b) =>
+    let filtered = data.filter(j => {
+
+        let combinedText = `
+            ${j.journal_name || ""}
+            ${j.issn || ""}
+            ${j.publisher || ""}
+            ${j.field || ""}
+        `.toLowerCase();
+
+        return combinedText.includes(keyword) &&
+               (rankFilter === "" || j.rank === rankFilter);
+    });
+
+    // SORTING
+    if (sort === "name") {
+        filtered.sort((a, b) =>
             (a.journal_name || "").localeCompare(b.journal_name || "")
         );
     }
 
-    if (s === "rank") {
+    if (sort === "rank") {
         const order = {"A*":1,"A":2,"B":3,"C":4};
         filtered.sort((a,b) => (order[a.rank] || 99) - (order[b.rank] || 99));
     }
