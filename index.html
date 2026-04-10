@@ -2,125 +2,70 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ABDC 2025 Journal Finder</title>
+<title>ABDC Journal Finder</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body { margin:0; font-family:Arial; background:#f5f7fb; }
-
-.navbar {
-    background:#0f172a; color:white;
-    display:flex; justify-content:space-between;
-    padding:15px 30px;
-}
-
-.hero {
-    background:linear-gradient(135deg,#1e3a8a,#0f172a);
-    color:white; text-align:center; padding:30px;
-}
-
+.navbar { background:#0f172a; color:white; display:flex; justify-content:space-between; padding:15px 30px; }
+.navbar ul { list-style:none; display:flex; gap:20px; margin:0; }
+.hero { background:linear-gradient(135deg,#1e3a8a,#0f172a); color:white; text-align:center; padding:30px; }
 .container { max-width:1200px; margin:auto; padding:20px; }
-
-.filters {
-    background:white; padding:15px;
-    border-radius:10px;
-    display:grid;
-    grid-template-columns:1fr 150px 150px 120px;
-    gap:10px;
-    margin-bottom:20px;
-}
-
-input, select, textarea {
-    padding:10px;
-    border-radius:6px;
-    border:1px solid #ddd;
-}
-
-.grid {
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
-    gap:15px;
-}
-
-.card {
-    background:white;
-    padding:15px;
-    border-radius:10px;
-    box-shadow:0 4px 10px rgba(0,0,0,0.08);
-}
-
-.badge {
-    display:inline-block;
-    padding:5px 10px;
-    border-radius:20px;
-    color:white;
-    font-size:12px;
-    margin-top:5px;
-}
-
+.filters { background:white; padding:15px; border-radius:10px; display:grid; grid-template-columns:1fr 150px 150px 120px; gap:10px; margin-bottom:20px; }
+input, select, textarea { padding:10px; border-radius:6px; border:1px solid #ddd; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:15px; }
+.card { background:white; padding:15px; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.08); }
+.badge { display:inline-block; padding:5px 10px; border-radius:20px; color:white; font-size:12px; margin-top:5px; }
 .Astar { background:red; }
 .A { background:blue; }
 .B { background:green; }
 .C { background:gray; }
-
-.pagination {
-    display:flex;
-    justify-content:center;
-    gap:10px;
-    margin-top:20px;
-}
-
-button {
-    padding:8px 15px;
-    border:none;
-    background:#1e3a8a;
-    color:white;
-    border-radius:5px;
-    cursor:pointer;
-}
-
-footer {
-    background:#0f172a;
-    color:white;
-    text-align:center;
-    padding:20px;
-    margin-top:40px;
-}
+.pagination { display:flex; justify-content:center; gap:10px; margin-top:20px; }
+button { padding:8px 15px; border:none; background:#1e3a8a; color:white; border-radius:5px; cursor:pointer; }
+button:disabled { background:#ccc; }
+footer { background:#0f172a; color:white; text-align:center; padding:20px; margin-top:40px; }
+#modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; }
+#modal div { background:white; width:90%; max-width:700px; margin:80px auto; padding:20px; border-radius:10px; max-height:80%; overflow-y:auto; position:relative; }
+#modal span { position:absolute; right:15px; top:10px; cursor:pointer; font-size:20px; }
 </style>
 </head>
 
 <body>
 
+<!-- NAVBAR -->
 <div class="navbar">
     <div>ABDC Finder</div>
-    <div>Home | Journals | About</div>
+    <ul>
+        <li>Home</li>
+        <li>Journals</li>
+        <li>About</li>
+        <li>Contact</li>
+    </ul>
 </div>
 
+<!-- HERO -->
 <div class="hero">
     <h1>ABDC Journal Finder</h1>
+    <p>Search ABDC indexed journals by name, ISSN, field, or publisher</p>
 </div>
 
 <div class="container">
 
-<!-- 🤖 AI RECOMMENDER -->
-<div style="display:flex; justify-content:space-between; align-items:center;">
-    <h2>🤖 AI Journal Recommendation</h2>
-    <button onclick="openModal()" style="
-        background:#2563eb;
-        color:white;
-        border:none;
-        padding:6px 12px;
-        border-radius:6px;
-        cursor:pointer;
-    ">
-        ℹ️ How it works
-    </button>
+<!-- AI Recommendation Section -->
+<div style="background:white;padding:20px;border-radius:10px;margin-bottom:20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>🤖 AI Journal Recommendation</h2>
+        <button onclick="openModal()" style="background:#2563eb;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">ℹ️ How it works</button>
+    </div>
+    <textarea id="abstract" placeholder="Paste your abstract here..." style="width:100%;height:120px;margin-top:10px;"></textarea>
+    <br><br>
+    <button onclick="recommend()">Find Matching Journals</button>
+    <div id="aiResults" style="margin-top:20px;"></div>
 </div>
 
-<!-- FILTER -->
+<!-- Filters & Pagination -->
 <div class="filters">
     <input id="search" placeholder="Search journal, ISSN, publisher...">
-
     <select id="rank">
         <option value="">All Ranks</option>
         <option>A*</option>
@@ -128,13 +73,11 @@ footer {
         <option>B</option>
         <option>C</option>
     </select>
-
     <select id="sort">
         <option value="">Sort</option>
         <option value="name">Name</option>
         <option value="rank">Rank</option>
     </select>
-
     <select id="perPage">
         <option value="10">10</option>
         <option value="20" selected>20</option>
@@ -143,9 +86,7 @@ footer {
 </div>
 
 <div id="count"></div>
-
 <div class="grid" id="list"></div>
-
 <div class="pagination">
     <button onclick="prevPage()">Prev</button>
     <span id="pageInfo"></span>
@@ -154,355 +95,110 @@ footer {
 
 </div>
 
-<footer>
-    <p><strong>Powered by ABS Research Academy</strong></p>
-    <p>Academics for Better Society</p>
-</footer>
-
-<script>
-
-let data = [];
-let filtered = [];
-let currentPage = 1;
-let perPage = 20;
-
-// LOAD DATA
-fetch("abdc_data.json")
-.then(res => res.json())
-.then(json => {
-    data = json;
-    applyFilters();
-});
-
-// FILTER FUNCTION
-function applyFilters() {
-    let keyword = search.value.toLowerCase();
-    let r = rank.value;
-    let s = sort.value;
-
-    filtered = data.filter(j => {
-        let text = `${j.journal_name} ${j.issn} ${j.publisher} ${j.field}`.toLowerCase();
-        return text.includes(keyword) &&
-               (r === "" || j.rank === r);
-    });
-
-    if (s === "name") {
-        filtered.sort((a,b)=>a.journal_name.localeCompare(b.journal_name));
-    }
-
-    if (s === "rank") {
-        const order = {"A*":1,"A":2,"B":3,"C":4};
-        filtered.sort((a,b)=>(order[a.rank]||99)-(order[b.rank]||99));
-    }
-
-    currentPage = 1;
-    render();
-}
-
-// RENDER
-function render() {
-    perPage = parseInt(perPageSelect.value);
-
-    let start = (currentPage - 1) * perPage;
-    let end = start + perPage;
-    let pageData = filtered.slice(start, end);
-
-    count.innerText = `Showing ${start+1}-${Math.min(end, filtered.length)} of ${filtered.length}`;
-
-    let html = "";
-
-    pageData.forEach(j => {
-        let r = (j.rank || "").replace("*","star");
-
-        html += `
-        <div class="card">
-            <b>${j.journal_name}</b>
-            <div class="badge ${r}">${j.rank || ""}</div>
-            <div>Field: ${j.field || ""}</div>
-            <div>Publisher: ${j.publisher || "N/A"}</div>
-            <div>ISSN: ${j.issn || ""}</div>
-        </div>`;
-    });
-
-    list.innerHTML = html;
-
-    let totalPages = Math.ceil(filtered.length / perPage);
-    pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
-}
-
-// PAGINATION
-function nextPage() {
-    let totalPages = Math.ceil(filtered.length / perPage);
-    if (currentPage < totalPages) {
-        currentPage++;
-        render();
-    }
-}
-
-function prevPage() {
-    if (currentPage > 1) {
-        currentPage--;
-        render();
-    }
-}
-
-// 🤖 AI RECOMMENDER
-function cleanText(text) {
-    return text.toLowerCase()
-        .replace(/[^\w\s]/g, "")
-        .split(" ")
-        .filter(w => w.length > 3);
-}
-
-// 🎯 Acceptance Probability Function
-function predictAcceptance(journal, score, abstract) {
-
-    // Match score (max 60)
-    let matchScore = Math.min(score * 5, 60);
-
-    // Rank difficulty
-    let rankWeight = {
-        "A*": 10,
-        "A": 20,
-        "B": 25,
-        "C": 30
-    };
-
-    let rankScore = rankWeight[journal.rank] || 15;
-
-    // Abstract quality
-    let length = abstract.length;
-    let qualityScore = 0;
-
-    if (length > 150) qualityScore = 10;
-    else if (length > 80) qualityScore = 7;
-    else qualityScore = 3;
-
-    // Final probability
-    let total = matchScore + rankScore + qualityScore;
-
-    return Math.min(Math.round(total), 95);
-}
-
-// 🚀 Main Recommendation Function
-function recommend() {
-
-    let abs = abstract.value;
-
-    if (!abs || abs.length < 20) {
-        alert("Please enter a meaningful abstract");
-        return;
-    }
-
-    let keywords = cleanText(abs);
-
-    let results = data.map(j => {
-
-        let text = `${j.journal_name} ${j.field} ${j.publisher}`.toLowerCase();
-
-        let score = 0;
-
-        keywords.forEach(k => {
-            if (text.includes(k)) score++;
-        });
-
-        return { ...j, score: score };
-    });
-
-    // Sort by relevance
-    results.sort((a,b)=>b.score-a.score);
-
-    let top = results.slice(0,10);
-
-    let html = "<h3>Top Recommended Journals</h3>";
-
-    top.forEach(j => {
-
-    let r = (j.rank || "").replace("*","star");
-
-    let prob = predictAcceptance(j, j.score, abs);
-
-    let color = prob > 70 ? "#16a34a" :
-                prob > 40 ? "#f59e0b" : "#dc2626";
-
-    html += `
-    <div class="card" style="
-        border-left: 6px solid ${color};
-        padding:15px;
-        border-radius:10px;
-        background:#fff;
-        box-shadow:0 4px 12px rgba(0,0,0,0.08);
-    ">
-        
-        <div style="font-weight:bold; font-size:16px;">
-            ${j.journal_name}
-        </div>
-
-        <div style="margin-top:5px;">
-            <span class="badge ${r}">${j.rank || ""}</span>
-        </div>
-
-        <div style="margin-top:8px; font-size:13px; color:#555;">
-            <div><b>Field:</b> ${j.field || "N/A"}</div>
-            <div><b>Publisher:</b> ${j.publisher || "N/A"}</div>
-            <div><b>ISSN:</b> ${j.issn || "N/A"}</div>
-        </div>
-
-        <!-- MATCH SCORE -->
-        <div style="margin-top:10px;">
-            <b>Match Score:</b> ${j.score}
-        </div>
-
-        <!-- ACCEPTANCE PROBABILITY -->
-        <div style="margin-top:8px;">
-            <b>Acceptance Probability:</b> 
-            <span style="color:${color}; font-weight:bold;">
-                ${prob}%
-            </span>
-        </div>
-
-        <!-- PROGRESS BAR -->
-        <div style="
-            margin-top:8px;
-            height:8px;
-            background:#eee;
-            border-radius:5px;
-            overflow:hidden;
-        ">
-            <div style="
-                width:${prob}%;
-                height:100%;
-                background:${color};
-            "></div>
-        </div>
-
-    </div>
-    `;
-});
-    aiResults.innerHTML = html;
-}
-
-// EVENTS
-search.addEventListener("input", applyFilters);
-rank.addEventListener("change", applyFilters);
-sort.addEventListener("change", applyFilters);
-perPageSelect = document.getElementById("perPage");
-perPageSelect.addEventListener("change", applyFilters);
-top.forEach(j => {
-
-    let r = (j.rank || "").replace("*","star");
-
-    let prob = predictAcceptance(j, j.score, abs);
-
-    let color = prob > 70 ? "green" : prob > 40 ? "orange" : "red";
-
-    html += `
-    <div class="card">
-        <b>${j.journal_name}</b>
-        <div class="badge ${r}">${j.rank || ""}</div>
-        <div>Field: ${j.field || ""}</div>
-        <div>Publisher: ${j.publisher || "N/A"}</div>
-        <div>ISSN: ${j.issn || ""}</div>
-        <div><b>Match Score:</b> ${j.score}</div>
-        <div style="margin-top:8px;">
-            <b>Acceptance Probability:</b> 
-            <span style="color:${color};font-weight:bold;">
-                ${prob}%
-            </span>
-        </div>
-    </div>
-    `;
-});
-function openModal() {
-    document.getElementById("modal").style.display = "block";
-}
-
-function closeModal() {
-    document.getElementById("modal").style.display = "none";
-}
-
-// Close when clicking outside
-window.onclick = function(event) {
-    let modal = document.getElementById("modal");
-    if (event.target === modal) {
-        modal.style.display = "none";
-    }
-}
-
-<div style="display:flex; justify-content:space-between; align-items:center;">
-    <h2>🤖 AI Journal Recommendation</h2>
-    <button onclick="openModal()" style="
-        background:#2563eb;
-        color:white;
-        border:none;
-        padding:6px 12px;
-        border-radius:6px;
-        cursor:pointer;
-    ">
-        ℹ️ How it works
-    </button>
-</div>
-
-<div id="modal" style="
-    display:none;
-    position:fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    background:rgba(0,0,0,0.6);
-    z-index:1000;
-">
-
-    <div style="
-        background:white;
-        width:90%;
-        max-width:700px;
-        margin:80px auto;
-        padding:20px;
-        border-radius:10px;
-        position:relative;
-        max-height:80%;
-        overflow-y:auto;
-    ">
-
-        <span onclick="closeModal()" style="
-            position:absolute;
-            right:15px;
-            top:10px;
-            cursor:pointer;
-            font-size:20px;
-        ">✖</span>
-
+<!-- Modal for AI explanation -->
+<div id="modal">
+    <div>
+        <span onclick="closeModal()">✖</span>
         <h2>🤖 AI Journal Recommendation System</h2>
-
-        <p><b>How the system works:</b></p>
-
+        <p><b>How it works:</b></p>
         <ul>
             <li><b>Keyword Matching:</b> Extracts keywords from your abstract and matches them with journal name, field, and publisher.</li>
             <li><b>Match Score:</b> Each keyword match increases the relevance score.</li>
             <li><b>Ranking:</b> Journals are ranked based on the highest match score.</li>
         </ul>
-
         <p><b>Acceptance Probability is estimated using:</b></p>
-
         <ul>
             <li>📊 <b>Match Score (60%)</b></li>
             <li>🏆 <b>Journal Rank (30%)</b></li>
             <li>✍️ <b>Abstract Quality (10%)</b></li>
         </ul>
-
         <p><b>Color Indicators:</b></p>
         <ul>
             <li>🟢 High probability (&gt;70%)</li>
             <li>🟠 Medium probability (40–70%)</li>
             <li>🔴 Low probability (&lt;40%)</li>
         </ul>
-
-        <p style="font-size:13px; color:#555;">
-            Note: This is an AI-assisted estimation based on textual similarity and journal characteristics. It does not guarantee acceptance.
-        </p>
-
+        <p style="font-size:13px;color:#555;">Note: This is an AI-assisted estimation. It does not guarantee acceptance.</p>
     </div>
 </div>
+
+<footer>
+    <img src="logo.png" alt="ABS Logo" style="width:120px;margin-bottom:10px;">
+    <p><strong>Powered by ABS Research Academy</strong></p>
+    <p>Academics for Better Society</p>
+</footer>
+
+<script>
+let data=[], filtered=[], currentPage=1, perPage=20;
+let search=document.getElementById("search");
+let rank=document.getElementById("rank");
+let sort=document.getElementById("sort");
+let count=document.getElementById("count");
+let list=document.getElementById("list");
+let pageInfo=document.getElementById("pageInfo");
+let aiResults=document.getElementById("aiResults");
+let abstract=document.getElementById("abstract");
+let perPageSelect=document.getElementById("perPage");
+let modal=document.getElementById("modal");
+
+// Load JSON
+fetch("abdc_data.json").then(r=>r.json()).then(json=>{data=json; applyFilters();});
+
+// Filters
+search.addEventListener("input",applyFilters);
+rank.addEventListener("change",applyFilters);
+sort.addEventListener("change",applyFilters);
+perPageSelect.addEventListener("change",applyFilters);
+
+function applyFilters(){
+    let keyword=search.value.toLowerCase();
+    let r=rank.value;
+    let s=sort.value;
+    filtered=data.filter(j=>{
+        let text=`${j.journal_name} ${j.issn} ${j.publisher} ${j.field}`.toLowerCase();
+        return text.includes(keyword) && (r==""||j.rank==r);
+    });
+    if(s=="name") filtered.sort((a,b)=>a.journal_name.localeCompare(b.journal_name));
+    if(s=="rank"){const order={"A*":1,"A":2,"B":3,"C":4}; filtered.sort((a,b)=>(order[a.rank]||99)-(order[b.rank]||99));}
+    currentPage=1; render();
+}
+
+// Render page
+function render(){
+    perPage=parseInt(perPageSelect.value);
+    let start=(currentPage-1)*perPage;
+    let end=start+perPage;
+    let pageData=filtered.slice(start,end);
+    count.innerText=`Showing ${start+1}-${Math.min(end,filtered.length)} of ${filtered.length}`;
+    let html="";
+    pageData.forEach(j=>{
+        let r=(j.rank||"").replace("*","star");
+        html+=`<div class="card">
+        <b>${j.journal_name}</b>
+        <div class="badge ${r}">${j.rank||""}</div>
+        <div>Field: ${j.field||"N/A"}</div>
+        <div>Publisher: ${j.publisher||"N/A"}</div>
+        <div>ISSN: ${j.issn||""}</div>
+        </div>`;
+    });
+    list.innerHTML=html;
+    let totalPages=Math.ceil(filtered.length/perPage);
+    pageInfo.innerText=`Page ${currentPage} of ${totalPages}`;
+}
+
+// Pagination
+function nextPage(){let totalPages=Math.ceil(filtered.length/perPage); if(currentPage<totalPages){currentPage++; render();}}
+function prevPage(){if(currentPage>1){currentPage--; render();}}
+
+// AI Journal Recommendation
+function cleanText(text){return text.toLowerCase().replace(/[^\w\s]/g,"").split(" ").filter(w=>w.length>3);}
+function predictAcceptance(journal,score,abs){let matchScore=Math.min(score*5,60);let rankWeight={"A*":10,"A":20,"B":25,"C":30};let rankScore=rankWeight[journal.rank]||15;let length=abs.length;let qualityScore=length>150?10:length>80?7:3;let total=matchScore+rankScore+qualityScore;return Math.min(Math.round(total),95);}
+function recommend(){let abs=abstract.value;if(!abs||abs.length<20){alert("Please enter a meaningful abstract");return;}let keywords=cleanText(abs);let results=data.map(j=>{let text=`${j.journal_name} ${j.field} ${j.publisher}`.toLowerCase();let score=0;keywords.forEach(k=>{if(text.includes(k))score++;});return {...j,score:score};});results.sort((a,b)=>b.score-a.score);let top=results.slice(0,10);let html="<h3>Top Recommended Journals</h3>";top.forEach(j=>{let r=(j.rank||"").replace("*","star");let prob=predictAcceptance(j,j.score,abs);let color=prob>70?"#16a34a":prob>40?"#f59e0b":"#dc2626";html+=`<div class="card" style="border-left:6px solid ${color};padding:15px;border-radius:10px;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.08);"><div style="font-weight:bold;font-size:16px;">${j.journal_name}</div><div style="margin-top:5px;"><span class="badge ${r}">${j.rank||""}</span></div><div style="margin-top:8px;font-size:13px;color:#555;"><div><b>Field:</b> ${j.field||"N/A"}</div><div><b>Publisher:</b> ${j.publisher||"N/A"}</div><div><b>ISSN:</b> ${j.issn||"N/A"}</div></div><div style="margin-top:10px;"><b>Match Score:</b> ${j.score}</div><div style="margin-top:8px;"><b>Acceptance Probability:</b> <span style="color:${color}; font-weight:bold;">${prob}%</span></div><div style="margin-top:8px;height:8px;background:#eee;border-radius:5px;overflow:hidden;"><div style="width:${prob}%;height:100%;background:${color};"></div></div></div>`});aiResults.innerHTML=html;}
+
+// Modal functions
+function openModal(){modal.style.display="block";}
+function closeModal(){modal.style.display="none";}
+window.onclick=function(event){if(event.target===modal)modal.style.display="none";}
 </script>
 
 </body>
