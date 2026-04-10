@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ABDC Journal Finder</title>
+<title>ABDC 2025 Journal Finder</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -250,6 +250,37 @@ function cleanText(text) {
         .filter(w => w.length > 3);
 }
 
+// 🎯 Acceptance Probability Function
+function predictAcceptance(journal, score, abstract) {
+
+    // Match score (max 60)
+    let matchScore = Math.min(score * 5, 60);
+
+    // Rank difficulty
+    let rankWeight = {
+        "A*": 10,
+        "A": 20,
+        "B": 25,
+        "C": 30
+    };
+
+    let rankScore = rankWeight[journal.rank] || 15;
+
+    // Abstract quality
+    let length = abstract.length;
+    let qualityScore = 0;
+
+    if (length > 150) qualityScore = 10;
+    else if (length > 80) qualityScore = 7;
+    else qualityScore = 3;
+
+    // Final probability
+    let total = matchScore + rankScore + qualityScore;
+
+    return Math.min(Math.round(total), 95);
+}
+
+// 🚀 Main Recommendation Function
 function recommend() {
 
     let abs = abstract.value;
@@ -274,6 +305,7 @@ function recommend() {
         return { ...j, score: score };
     });
 
+    // Sort by relevance
     results.sort((a,b)=>b.score-a.score);
 
     let top = results.slice(0,10);
@@ -281,7 +313,15 @@ function recommend() {
     let html = "<h3>Top Recommended Journals</h3>";
 
     top.forEach(j => {
+
         let r = (j.rank || "").replace("*","star");
+
+        // 🎯 Calculate acceptance probability
+        let prob = predictAcceptance(j, j.score, abs);
+
+        // 🎨 Color logic
+        let color = prob > 70 ? "green" :
+                    prob > 40 ? "orange" : "red";
 
         html += `
         <div class="card">
@@ -290,7 +330,15 @@ function recommend() {
             <div>Field: ${j.field || ""}</div>
             <div>Publisher: ${j.publisher || "N/A"}</div>
             <div>ISSN: ${j.issn || ""}</div>
+            
             <div><b>Match Score:</b> ${j.score}</div>
+
+            <div style="margin-top:8px;">
+                <b>Acceptance Probability:</b> 
+                <span style="color:${color}; font-weight:bold;">
+                    ${prob}%
+                </span>
+            </div>
         </div>`;
     });
 
@@ -303,6 +351,31 @@ rank.addEventListener("change", applyFilters);
 sort.addEventListener("change", applyFilters);
 perPageSelect = document.getElementById("perPage");
 perPageSelect.addEventListener("change", applyFilters);
+top.forEach(j => {
+
+    let r = (j.rank || "").replace("*","star");
+
+    let prob = predictAcceptance(j, j.score, abs);
+
+    let color = prob > 70 ? "green" : prob > 40 ? "orange" : "red";
+
+    html += `
+    <div class="card">
+        <b>${j.journal_name}</b>
+        <div class="badge ${r}">${j.rank || ""}</div>
+        <div>Field: ${j.field || ""}</div>
+        <div>Publisher: ${j.publisher || "N/A"}</div>
+        <div>ISSN: ${j.issn || ""}</div>
+        <div><b>Match Score:</b> ${j.score}</div>
+        <div style="margin-top:8px;">
+            <b>Acceptance Probability:</b> 
+            <span style="color:${color};font-weight:bold;">
+                ${prob}%
+            </span>
+        </div>
+    </div>
+    `;
+});
 
 </script>
 
