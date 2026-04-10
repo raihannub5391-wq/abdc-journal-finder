@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ABDC Journal Finder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+/* ===== GLOBAL ===== */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f5f7fb;
+}
+
+/* ===== HEADER ===== */
+.hero {
+    background: linear-gradient(135deg, #1e3a8a, #0f172a);
+    color: white;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.hero h1 {
+    margin: 0;
+    font-size: 32px;
+}
+
+.hero p {
+    margin-top: 10px;
+    opacity: 0.85;
+}
+
+/* ===== CONTAINER ===== */
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* ===== FILTER BAR ===== */
+.filters {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+input, select {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+}
+
+/* ===== TOP BAR ===== */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+/* ===== GRID ===== */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+/* ===== CARD ===== */
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-6px);
+}
+
+.title {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* ===== BADGE ===== */
+.badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    color: white;
+    font-size: 12px;
+}
+
+.Astar { background: #dc2626; }
+.A { background: #2563eb; }
+.B { background: #16a34a; }
+.C { background: #6b7280; }
+
+/* ===== META ===== */
+.meta {
+    margin-top: 6px;
+    font-size: 13px;
+    color: #555;
+}
+
+/* ===== FOOTER ===== */
+footer {
+    background: #0f172a;
+    color: white;
+    text-align: center;
+    padding: 25px;
+    margin-top: 40px;
+}
+
+footer img {
+    width: 120px;
+    margin-bottom: 10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- HERO -->
+<div class="hero">
+    <h1>ABDC Journal Finder</h1>
+    <p>Search and filter ABDC indexed journals quickly and efficiently</p>
+</div>
+
+<div class="container">
+
+<!-- TOP BAR -->
+<div class="topbar">
+    <div id="count">Loading...</div>
+
+    <select id="sort">
+        <option value="">Sort</option>
+        <option value="name">Name A–Z</option>
+        <option value="rank">Rank</option>
+    </select>
+</div>
+
+<!-- FILTERS -->
+<div class="filters">
+    <input id="name" placeholder="Journal Name">
+    <input id="issn" placeholder="ISSN">
+    <input id="publisher" placeholder="Publisher">
+    <input id="field" placeholder="Field">
+
+    <select id="rank">
+        <option value="">All Ranks</option>
+        <option>A*</option>
+        <option>A</option>
+        <option>B</option>
+        <option>C</option>
+    </select>
+</div>
+
+<!-- GRID -->
+<div class="grid" id="list"></div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+    <img src="logo.png" alt="ABS Research Academy Logo">
+    <p><strong>Powered by ABS Research Academy</strong></p>
+    <p>Academics for Better Society</p>
+</footer>
+
+<script>
+
+let data = [];
+
+// LOAD JSON
+fetch("abdc_data.json")
+.then(res => res.json())
+.then(json => {
+    data = json;
+    render(data);
+})
+.catch(() => {
+    document.getElementById("count").innerText = "Error loading data";
+});
+
+// RENDER FUNCTION
+function render(arr) {
+    document.getElementById("count").innerText =
+        "Total Journals: " + arr.length;
+
+    let html = "";
+
+    arr.forEach(j => {
+        let r = (j.rank || "").replace("*","star");
+
+        html += `
+        <div class="card">
+            <div class="title">${j.journal_name}</div>
+            <span class="badge ${r}">${j.rank || ""}</span>
+
+            <div class="meta">Field: ${j.field || ""}</div>
+            <div class="meta">Publisher: ${j.publisher || ""}</div>
+            <div class="meta">ISSN: ${j.issn || ""}</div>
+        </div>
+        `;
+    });
+
+    document.getElementById("list").innerHTML = html;
+}
+
+// FILTER FUNCTION
+document.querySelectorAll("input, select").forEach(el => {
+    el.addEventListener("input", filter);
+    el.addEventListener("change", filter);
+});
+
+function filter() {
+    let n = name.value.toLowerCase();
+    let i = issn.value.toLowerCase();
+    let p = publisher.value.toLowerCase();
+    let f = field.value.toLowerCase();
+    let r = rank.value;
+    let s = sort.value;
+
+    let filtered = data.filter(j =>
+        (j.journal_name || "").toLowerCase().includes(n) &&
+        (j.issn || "").toLowerCase().includes(i) &&
+        (j.publisher || "").toLowerCase().includes(p) &&
+        (j.field || "").toLowerCase().includes(f) &&
+        (r === "" || j.rank === r)
+    );
+
+    // SORT
+    if (s === "name") {
+        filtered.sort((a,b) =>
+            (a.journal_name || "").localeCompare(b.journal_name || "")
+        );
+    }
+
+    if (s === "rank") {
+        const order = {"A*":1,"A":2,"B":3,"C":4};
+        filtered.sort((a,b) => (order[a.rank] || 99) - (order[b.rank] || 99));
+    }
+
+    render(filtered);
+}
+
+</script>
+
+</body>
+</html>
