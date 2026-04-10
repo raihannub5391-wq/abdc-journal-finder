@@ -6,60 +6,47 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-    margin: 0;
-    font-family: Arial;
-    background: #f5f7fb;
-}
+body { margin:0; font-family:Arial; background:#f5f7fb; }
 
 .navbar {
-    background: #0f172a;
-    color: white;
-    display: flex;
-    justify-content: space-between;
-    padding: 15px 30px;
+    background:#0f172a; color:white;
+    display:flex; justify-content:space-between;
+    padding:15px 30px;
 }
 
 .hero {
-    background: linear-gradient(135deg,#1e3a8a,#0f172a);
-    color: white;
-    text-align: center;
-    padding: 30px;
+    background:linear-gradient(135deg,#1e3a8a,#0f172a);
+    color:white; text-align:center; padding:30px;
 }
 
-.container {
-    max-width: 1200px;
-    margin: auto;
-    padding: 20px;
-}
+.container { max-width:1200px; margin:auto; padding:20px; }
 
 .filters {
-    background: white;
-    padding: 15px;
-    border-radius: 10px;
-    display: grid;
-    grid-template-columns: 1fr 150px 150px 120px;
-    gap: 10px;
-    margin-bottom: 20px;
+    background:white; padding:15px;
+    border-radius:10px;
+    display:grid;
+    grid-template-columns:1fr 150px 150px 120px;
+    gap:10px;
+    margin-bottom:20px;
 }
 
-input, select {
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid #ddd;
+input, select, textarea {
+    padding:10px;
+    border-radius:6px;
+    border:1px solid #ddd;
 }
 
 .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill,minmax(300px,1fr));
-    gap: 15px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+    gap:15px;
 }
 
 .card {
-    background: white;
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.08);
 }
 
 .badge {
@@ -92,10 +79,6 @@ button {
     cursor:pointer;
 }
 
-button:disabled {
-    background:#ccc;
-}
-
 footer {
     background:#0f172a;
     color:white;
@@ -119,9 +102,21 @@ footer {
 
 <div class="container">
 
+<!-- 🤖 AI RECOMMENDER -->
+<div style="background:white;padding:20px;border-radius:10px;margin-bottom:20px;">
+    <h2>🤖 AI Journal Recommendation</h2>
+
+    <textarea id="abstract" placeholder="Paste your abstract here..."></textarea><br><br>
+
+    <button onclick="recommend()">Find Matching Journals</button>
+
+    <div id="aiResults"></div>
+</div>
+
+<!-- FILTER -->
 <div class="filters">
     <input id="search" placeholder="Search journal, ISSN, publisher...">
-    
+
     <select id="rank">
         <option value="">All Ranks</option>
         <option>A*</option>
@@ -167,6 +162,7 @@ let filtered = [];
 let currentPage = 1;
 let perPage = 20;
 
+// LOAD DATA
 fetch("abdc_data.json")
 .then(res => res.json())
 .then(json => {
@@ -174,6 +170,7 @@ fetch("abdc_data.json")
     applyFilters();
 });
 
+// FILTER FUNCTION
 function applyFilters() {
     let keyword = search.value.toLowerCase();
     let r = rank.value;
@@ -198,15 +195,15 @@ function applyFilters() {
     render();
 }
 
+// RENDER
 function render() {
-    perPage = parseInt(document.getElementById("perPage").value);
+    perPage = parseInt(perPageSelect.value);
 
     let start = (currentPage - 1) * perPage;
     let end = start + perPage;
     let pageData = filtered.slice(start, end);
 
-    document.getElementById("count").innerText =
-        `Showing ${start+1}-${Math.min(end, filtered.length)} of ${filtered.length}`;
+    count.innerText = `Showing ${start+1}-${Math.min(end, filtered.length)} of ${filtered.length}`;
 
     let html = "";
 
@@ -220,18 +217,16 @@ function render() {
             <div>Field: ${j.field || ""}</div>
             <div>Publisher: ${j.publisher || "N/A"}</div>
             <div>ISSN: ${j.issn || ""}</div>
-        </div>
-        `;
+        </div>`;
     });
 
-    document.getElementById("list").innerHTML = html;
+    list.innerHTML = html;
 
     let totalPages = Math.ceil(filtered.length / perPage);
-
-    document.getElementById("pageInfo").innerText =
-        `Page ${currentPage} of ${totalPages}`;
+    pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
 }
 
+// PAGINATION
 function nextPage() {
     let totalPages = Math.ceil(filtered.length / perPage);
     if (currentPage < totalPages) {
@@ -247,10 +242,67 @@ function prevPage() {
     }
 }
 
+// 🤖 AI RECOMMENDER
+function cleanText(text) {
+    return text.toLowerCase()
+        .replace(/[^\w\s]/g, "")
+        .split(" ")
+        .filter(w => w.length > 3);
+}
+
+function recommend() {
+
+    let abs = abstract.value;
+
+    if (!abs || abs.length < 20) {
+        alert("Please enter a meaningful abstract");
+        return;
+    }
+
+    let keywords = cleanText(abs);
+
+    let results = data.map(j => {
+
+        let text = `${j.journal_name} ${j.field} ${j.publisher}`.toLowerCase();
+
+        let score = 0;
+
+        keywords.forEach(k => {
+            if (text.includes(k)) score++;
+        });
+
+        return { ...j, score: score };
+    });
+
+    results.sort((a,b)=>b.score-a.score);
+
+    let top = results.slice(0,10);
+
+    let html = "<h3>Top Recommended Journals</h3>";
+
+    top.forEach(j => {
+        let r = (j.rank || "").replace("*","star");
+
+        html += `
+        <div class="card">
+            <b>${j.journal_name}</b>
+            <div class="badge ${r}">${j.rank || ""}</div>
+            <div>Field: ${j.field || ""}</div>
+            <div>Publisher: ${j.publisher || "N/A"}</div>
+            <div>ISSN: ${j.issn || ""}</div>
+            <div><b>Match Score:</b> ${j.score}</div>
+        </div>`;
+    });
+
+    aiResults.innerHTML = html;
+}
+
+// EVENTS
 search.addEventListener("input", applyFilters);
 rank.addEventListener("change", applyFilters);
 sort.addEventListener("change", applyFilters);
-perPage.addEventListener("change", applyFilters);
+perPageSelect = document.getElementById("perPage");
+perPageSelect.addEventListener("change", applyFilters);
 
 </script>
 
