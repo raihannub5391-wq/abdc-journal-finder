@@ -6,153 +6,122 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-
-/* ===== GLOBAL ===== */
 body {
     margin: 0;
-    font-family: 'Segoe UI', Arial, sans-serif;
+    font-family: Arial;
     background: #f5f7fb;
 }
 
-/* ===== NAVBAR ===== */
 .navbar {
     background: #0f172a;
     color: white;
     display: flex;
     justify-content: space-between;
     padding: 15px 30px;
-    align-items: center;
 }
 
-.navbar .logo {
-    font-weight: bold;
-    font-size: 18px;
-}
-
-.navbar ul {
-    list-style: none;
-    display: flex;
-    gap: 20px;
-    margin: 0;
-}
-
-.navbar ul li {
-    cursor: pointer;
-}
-
-/* ===== HERO ===== */
 .hero {
-    background: linear-gradient(135deg, #1e3a8a, #0f172a);
+    background: linear-gradient(135deg,#1e3a8a,#0f172a);
     color: white;
     text-align: center;
-    padding: 40px 20px;
+    padding: 30px;
 }
 
-.hero h1 {
-    margin: 0;
-    font-size: 32px;
-}
-
-/* ===== CONTAINER ===== */
 .container {
     max-width: 1200px;
     margin: auto;
     padding: 20px;
 }
 
-/* ===== FILTERS ===== */
 .filters {
     background: white;
     padding: 15px;
-    border-radius: 12px;
+    border-radius: 10px;
     display: grid;
-    grid-template-columns: 1fr 150px 150px;
+    grid-template-columns: 1fr 150px 150px 120px;
     gap: 10px;
     margin-bottom: 20px;
 }
 
 input, select {
     padding: 10px;
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid #ddd;
 }
 
-/* ===== GRID ===== */
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill,minmax(300px,1fr));
+    gap: 15px;
 }
 
-/* ===== CARD ===== */
 .card {
     background: white;
-    border-radius: 12px;
     padding: 15px;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
 }
 
-.title {
-    font-weight: bold;
-}
-
-/* ===== BADGE ===== */
 .badge {
-    display: inline-block;
-    margin-top: 8px;
-    padding: 5px 12px;
-    border-radius: 20px;
-    color: white;
-    font-size: 12px;
+    display:inline-block;
+    padding:5px 10px;
+    border-radius:20px;
+    color:white;
+    font-size:12px;
+    margin-top:5px;
 }
 
-.Astar { background: #dc2626; }
-.A { background: #2563eb; }
-.B { background: #16a34a; }
-.C { background: #6b7280; }
+.Astar { background:red; }
+.A { background:blue; }
+.B { background:green; }
+.C { background:gray; }
 
-/* ===== FOOTER ===== */
+.pagination {
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:20px;
+}
+
+button {
+    padding:8px 15px;
+    border:none;
+    background:#1e3a8a;
+    color:white;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+button:disabled {
+    background:#ccc;
+}
+
 footer {
-    background: #0f172a;
-    color: white;
-    text-align: center;
-    padding: 25px;
-    margin-top: 40px;
+    background:#0f172a;
+    color:white;
+    text-align:center;
+    padding:20px;
+    margin-top:40px;
 }
-
-footer img {
-    width: 120px;
-    margin-bottom: 10px;
-}
-
 </style>
 </head>
 
 <body>
 
-<!-- NAVBAR -->
 <div class="navbar">
-    <div class="logo">ABDC Finder</div>
-    <ul>
-        <li>Home</li>
-        <li>Journals</li>
-        <li>About</li>
-        <li>Contact</li>
-    </ul>
+    <div>ABDC Finder</div>
+    <div>Home | Journals | About</div>
 </div>
 
-<!-- HERO -->
 <div class="hero">
     <h1>ABDC Journal Finder</h1>
-    <p>Search ABDC indexed journals by name, ISSN, field, or publisher</p>
 </div>
 
 <div class="container">
 
-<!-- FILTER -->
 <div class="filters">
-    <input id="search" placeholder="Search by Journal Name, ISSN, Publisher, or Field...">
-
+    <input id="search" placeholder="Search journal, ISSN, publisher...">
+    
     <select id="rank">
         <option value="">All Ranks</option>
         <option>A*</option>
@@ -163,22 +132,30 @@ footer img {
 
     <select id="sort">
         <option value="">Sort</option>
-        <option value="name">Name A–Z</option>
+        <option value="name">Name</option>
         <option value="rank">Rank</option>
+    </select>
+
+    <select id="perPage">
+        <option value="10">10</option>
+        <option value="20" selected>20</option>
+        <option value="50">50</option>
     </select>
 </div>
 
-<!-- RESULT COUNT -->
-<div id="count">Loading...</div>
+<div id="count"></div>
 
-<!-- GRID -->
 <div class="grid" id="list"></div>
+
+<div class="pagination">
+    <button onclick="prevPage()">Prev</button>
+    <span id="pageInfo"></span>
+    <button onclick="nextPage()">Next</button>
+</div>
 
 </div>
 
-<!-- FOOTER -->
 <footer>
-    <img src="logo.png" alt="ABS Logo">
     <p><strong>Powered by ABS Research Academy</strong></p>
     <p>Academics for Better Society</p>
 </footer>
@@ -186,65 +163,94 @@ footer img {
 <script>
 
 let data = [];
+let filtered = [];
+let currentPage = 1;
+let perPage = 20;
 
 fetch("abdc_data.json")
 .then(res => res.json())
 .then(json => {
     data = json;
-    render(data);
+    applyFilters();
 });
 
-// RENDER
-function render(arr) {
-    document.getElementById("count").innerText =
-        "Total Journals: " + arr.length;
-
-    let html = "";
-
-    arr.forEach(j => {
-        let r = (j.rank || "").replace("*","star");
-
-        html += `
-        <div class="card">
-            <div class="title">${j.journal_name}</div>
-            <span class="badge ${r}">${j.rank || ""}</span>
-            <div>Field: ${j.field || ""}</div>
-            <div>Publisher: ${j.publisher || "Not Available"}</div>
-            <div>ISSN: ${j.issn || ""}</div>
-        </div>
-        `;
-    });
-
-    document.getElementById("list").innerHTML = html;
-}
-
-// FILTER
-document.getElementById("search").addEventListener("input", filter);
-document.getElementById("rank").addEventListener("change", filter);
-document.getElementById("sort").addEventListener("change", filter);
-
-function filter() {
+function applyFilters() {
     let keyword = search.value.toLowerCase();
     let r = rank.value;
     let s = sort.value;
 
-    let filtered = data.filter(j => {
+    filtered = data.filter(j => {
         let text = `${j.journal_name} ${j.issn} ${j.publisher} ${j.field}`.toLowerCase();
         return text.includes(keyword) &&
                (r === "" || j.rank === r);
     });
 
     if (s === "name") {
-        filtered.sort((a,b) => a.journal_name.localeCompare(b.journal_name));
+        filtered.sort((a,b)=>a.journal_name.localeCompare(b.journal_name));
     }
 
     if (s === "rank") {
         const order = {"A*":1,"A":2,"B":3,"C":4};
-        filtered.sort((a,b) => (order[a.rank]||99)-(order[b.rank]||99));
+        filtered.sort((a,b)=>(order[a.rank]||99)-(order[b.rank]||99));
     }
 
-    render(filtered);
+    currentPage = 1;
+    render();
 }
+
+function render() {
+    perPage = parseInt(document.getElementById("perPage").value);
+
+    let start = (currentPage - 1) * perPage;
+    let end = start + perPage;
+    let pageData = filtered.slice(start, end);
+
+    document.getElementById("count").innerText =
+        `Showing ${start+1}-${Math.min(end, filtered.length)} of ${filtered.length}`;
+
+    let html = "";
+
+    pageData.forEach(j => {
+        let r = (j.rank || "").replace("*","star");
+
+        html += `
+        <div class="card">
+            <b>${j.journal_name}</b>
+            <div class="badge ${r}">${j.rank || ""}</div>
+            <div>Field: ${j.field || ""}</div>
+            <div>Publisher: ${j.publisher || "N/A"}</div>
+            <div>ISSN: ${j.issn || ""}</div>
+        </div>
+        `;
+    });
+
+    document.getElementById("list").innerHTML = html;
+
+    let totalPages = Math.ceil(filtered.length / perPage);
+
+    document.getElementById("pageInfo").innerText =
+        `Page ${currentPage} of ${totalPages}`;
+}
+
+function nextPage() {
+    let totalPages = Math.ceil(filtered.length / perPage);
+    if (currentPage < totalPages) {
+        currentPage++;
+        render();
+    }
+}
+
+function prevPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        render();
+    }
+}
+
+search.addEventListener("input", applyFilters);
+rank.addEventListener("change", applyFilters);
+sort.addEventListener("change", applyFilters);
+perPage.addEventListener("change", applyFilters);
 
 </script>
 
