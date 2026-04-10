@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ABDC Journal Finder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- SheetJS Library -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<style>
+body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    background: linear-gradient(135deg, #1e3a8a, #0f172a);
+    color: #333;
+}
+
+header {
+    text-align: center;
+    color: white;
+    padding: 25px;
+    font-size: 26px;
+    font-weight: bold;
+}
+
+/* Container */
+.container {
+    background: #f8fafc;
+    margin: 20px;
+    padding: 20px;
+    border-radius: 15px;
+}
+
+/* Filters */
+.filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+input, select {
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    width: 200px;
+}
+
+/* Cards */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.title {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: white;
+    font-size: 12px;
+}
+
+.Astar { background: #dc2626; }
+.A { background: #2563eb; }
+.B { background: #16a34a; }
+.C { background: #6b7280; }
+
+.meta {
+    font-size: 13px;
+    margin-top: 5px;
+    color: #555;
+}
+
+/* Upload box */
+.upload {
+    margin-bottom: 15px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+📊 ABDC Journal Finder (Excel Connected)
+</header>
+
+<div class="container">
+
+<!-- Upload Excel -->
+<div class="upload">
+    <input type="file" id="upload" accept=".xlsx">
+</div>
+
+<!-- Filters -->
+<div class="filters">
+    <input type="text" id="search" placeholder="Search Journal...">
+
+    <select id="rankFilter">
+        <option value="">All Ranks</option>
+        <option value="A*">A*</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+    </select>
+
+    <input type="text" id="fieldFilter" placeholder="Field...">
+</div>
+
+<!-- Cards -->
+<div class="grid" id="journalList"></div>
+
+</div>
+
+<script>
+
+let journals = [];
+
+// =============================
+// Load Excel File
+// =============================
+document.getElementById('upload').addEventListener('change', handleFile);
+
+function handleFile(e) {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        let merged = [];
+
+        workbook.SheetNames.forEach(sheetName => {
+            const sheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(sheet);
+            merged = merged.concat(json);
+        });
+
+        journals = cleanData(merged);
+        displayData(journals);
+    };
+
+    reader.readAsArrayBuffer(file);
+}
+
+// =============================
+// Clean Data
+// =============================
+function cleanData(data) {
+    return data.map(j => ({
+        journal_name: j["Journal Title"] || j["Title"] || j["Journal"] || "N/A",
+        rank: (j["ABDC Rank"] || j["Rating"] || "").toUpperCase(),
+        field: j["Field of Research"] || j["FoR"] || "",
+        publisher: j["Publisher"] || "",
+        issn: j["ISSN"] || ""
+    })).filter(j => j.journal_name !== "N/A");
+}
+
+// =============================
+// Display Cards
+// =============================
+function displayData(data) {
+    const container = document.getElementById('journalList');
+    container.innerHTML = '';
+
+    data.forEach(j => {
+        let rankClass = j.rank.replace('*','star');
+
+        container.innerHTML += `
+        <div class="card">
+            <div class="title">${j.journal_name}</div>
+            <span class="badge ${rankClass}">${j.rank || "N/A"}</span>
+
+            <div class="meta">📚 Field: ${j.field}</div>
+            <div class="meta">🏢 Publisher: ${j.publisher}</div>
+            <div class="meta">🔢 ISSN: ${j.issn}</div>
+        </div>
+        `;
+    });
+}
+
+// =============================
+// Filters
+// =============================
+document.getElementById('search').addEventListener('input', filterData);
+document.getElementById('rankFilter').addEventListener('change', filterData);
+document.getElementById('fieldFilter').addEventListener('input', filterData);
+
+function filterData() {
+    let search = document.getElementById('search').value.toLowerCase();
+    let rank = document.getElementById('rankFilter').value;
+    let field = document.getElementById('fieldFilter').value.toLowerCase();
+
+    let filtered = journals.filter(j => {
+        return (
+            j.journal_name.toLowerCase().includes(search) &&
+            (rank === "" || j.rank === rank) &&
+            j.field.toLowerCase().includes(field)
+        );
+    });
+
+    displayData(filtered);
+}
+
+</script>
+
+</body>
+</html>
